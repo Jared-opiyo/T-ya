@@ -1,0 +1,125 @@
+﻿{% extends "base.html" %}
+{% block title %}Payment Review | T-YA{% endblock %}
+
+{% block content %}
+<section class="page-hero">
+    <div class="container">
+        <p class="eyebrow">T-YA ADMINISTRATION</p>
+        <h1>Payment Review</h1>
+        <p>Review reported registration fees and monthly contributions.</p>
+        <p>
+            <a class="button button-gold" href="{{ url_for('admin.index') }}">Back to Admin Dashboard</a>
+            <a class="button button-gold" href="{{ url_for('admin.audit_logs', target_type='payment') }}">Payment Audit Log</a>
+        </p>
+    </div>
+</section>
+
+<section class="section">
+    <div class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div aria-live="polite">
+                    {% for category, message in messages %}
+                        <p class="status-note">{{ message }}</p>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <article class="dashboard-card">
+            <h2>Reported payments</h2>
+            <p>Verification confirms the reported payment record only. It does not automatically approve or activate a membership.</p>
+
+            <form method="get" action="{{ url_for('admin.payments') }}" class="member-filter-form">
+                <div class="form-group">
+                    <label for="payment-status">Filter by status</label>
+                    <select class="form-control" id="payment-status" name="status">
+                        <option value="" {% if not status_filter %}selected{% endif %}>All statuses</option>
+                        <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>Pending</option>
+                        <option value="verified" {% if status_filter == 'verified' %}selected{% endif %}>Verified</option>
+                        <option value="rejected" {% if status_filter == 'rejected' %}selected{% endif %}>Rejected</option>
+                    </select>
+                </div>
+                <button class="button button-gold" type="submit">Apply Filter</button>
+            </form>
+        </article>
+
+        {% if payments %}
+            {% for payment in payments %}
+                <article class="dashboard-card" style="margin-top: 1.5rem;">
+                    <h2>Payment #{{ payment.id }}</h2>
+                    <p><strong>Member:</strong> {{ ((payment.first_name or '') ~ ' ' ~ (payment.last_name or '')).strip() or (payment.member_name or 'Member') }} ({{ payment.email or payment.member_email or 'No email' }})</p>
+                    <p><strong>Membership:</strong> {{ payment.plan_name or 'Plan' }} — #{{ payment.membership_id }}</p>
+                    <p><strong>Type:</strong>
+                        {% if payment.payment_type == 'registration_fee' %}
+                            Registration fee
+                        {% else %}
+                            Monthly contribution
+                        {% endif %}
+                    </p>
+                    <p><strong>Amount:</strong> KSh {{ "{:,.0f}".format(payment.amount_kes) }}</p>
+                    <p><strong>Method:</strong> {{ payment.payment_method|replace('_', ' ')|title }}</p>
+                    <p><strong>Transaction reference:</strong> {{ payment.transaction_reference }}</p>
+                    <p><strong>Payment date:</strong> {{ payment.payment_date }}</p>
+                    <p><strong>Submitted:</strong> {{ payment.created_at }}</p>
+                    <p><strong>Status:</strong> {{ payment.status|title }}</p>
+
+                    {% if payment.member_note %}
+                        <p><strong>Member note:</strong> {{ payment.member_note }}</p>
+                    {% endif %}
+
+                    {% if payment.reviewed_at %}
+                        <p><strong>Reviewed:</strong> {{ payment.reviewed_at }}</p>
+                    {% endif %}
+                    {% if payment.reviewer_first_name or payment.reviewer_last_name %}
+                        <p><strong>Reviewed by:</strong> {{ ((payment.reviewer_first_name or '') ~ ' ' ~ (payment.reviewer_last_name or '')).strip() }}</p>
+                    {% endif %}
+                    {% if payment.review_note %}
+                        <p><strong>Review note:</strong> {{ payment.review_note }}</p>
+                    {% endif %}
+
+                    {% if payment.status == 'pending' %}
+                        <form method="post"
+                              action="{{ url_for('admin.review_payment', payment_id=payment.id) }}">
+                            <input type="hidden" name="csrf_token" value="{{ admin_csrf_token }}">
+
+                            <div class="form-group">
+                                <label for="review-note-{{ payment.id }}">Review note (required when rejecting)</label>
+                                <textarea class="form-control"
+                                          id="review-note-{{ payment.id }}"
+                                          name="review_note"
+                                          rows="3"
+                                          maxlength="500"
+                                          placeholder="Record the verification result or reason for rejection"></textarea>
+                            </div>
+
+                            <button class="button button-gold"
+                                    type="submit"
+                                    name="decision"
+                                    value="verify"
+                                    onclick="return confirm('Verify this reported payment? Check the transaction first.');">
+                                Mark Verified
+                            </button>
+
+                            <button class="button"
+                                    type="submit"
+                                    name="decision"
+                                    value="reject"
+                                    onclick="var n=this.form.querySelector('textarea[name=review_note]'); if(!n.value.trim()){alert('Enter a reason before rejecting this payment.'); n.focus(); return false;} return confirm('Reject this reported payment?');">
+                                Reject Payment
+                            </button>
+                        </form>
+                    {% else %}
+                        <p>This payment has already been reviewed. Its status cannot be reviewed again from this page.</p>
+                    {% endif %}
+                </article>
+            {% endfor %}
+        {% else %}
+            <article class="dashboard-card" style="margin-top: 1.5rem;">
+                <h2>No payments found</h2>
+                <p>No reported payments match the selected filter.</p>
+            </article>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

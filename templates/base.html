@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#10264a">
+    <meta name="description" content="T-YA helps families prepare for life's difficult moments through awareness, preparedness and practical support.">
+    <title>{% block title %}{{ page_title or 'Prepare Today. Be There Tomorrow.' }} | T-YA{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="{{ url_for('static', filename='js/app.js') }}" defer></script>
+</head>
+<body>
+    <div class="announcement">
+        Prepare today. Be there tomorrow.
+    </div>
+
+    <header class="site-header">
+        <div class="container nav-container">
+            <a class="brand" href="{{ url_for('public.home') }}" aria-label="T-YA home">
+                <img class="brand-logo" src="{{ url_for('static', filename='images/logo.jpeg') }}" alt="T-YA logo">
+                <span class="brand-copy">
+                    <strong>T-YA</strong>
+                    <small>Trust. Integrity. You. Always.</small>
+                </span>
+            </a>
+
+            <button class="menu-toggle" type="button"
+                    aria-expanded="false" aria-controls="main-navigation">
+                <span></span><span></span><span></span>
+                <span class="sr-only">Toggle navigation</span>
+            </button>
+
+            <nav class="main-navigation" id="main-navigation">
+                <a href="{{ url_for('public.home') }}">Home</a>
+                <a href="{{ url_for('public.about') }}">About</a>
+                <a href="{{ url_for('public.home') }}#how-it-works">How It Works</a>
+                <a href="{{ url_for('public.membership') }}">Membership</a>
+                <a href="{{ url_for('public.home') }}#resources">Resources</a>
+                {% if session.get('user_id') %}
+                    {% if session.get('user_role') == 'admin' %}
+                        <a href="{{ url_for('admin.index') }}">Admin dashboard</a>
+                    {% else %}
+                        <a href="{{ url_for('auth.dashboard') }}">Dashboard</a>
+                    {% endif %}
+                    <form class="nav-logout-form" method="post"
+                          action="{{ url_for('auth.logout') }}">
+                        <input type="hidden" name="csrf_token"
+                               value="{{ logout_csrf_token }}">
+                        <button class="nav-logout-button" type="submit">
+                            Sign out
+                        </button>
+                    </form>
+                {% else %}
+                    <a href="{{ url_for('auth.login') }}">Member login</a>
+                    <a class="nav-cta" href="#contact">Contact Us</a>
+                {% endif %}
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="site-footer" id="contact">
+        <div class="container footer-grid">
+            <div>
+                <a class="brand footer-brand" href="{{ url_for('public.home') }}">
+                    <img class="brand-logo" src="{{ url_for('static', filename='images/logo.jpeg') }}" alt="T-YA logo">
+                    <span class="brand-copy">
+                        <strong>T-YA</strong>
+                        <small>Trust. Integrity. You. Always.</small>
+                    </span>
+                </a>
+                <p>Helping people approach tomorrow with greater preparation, dignity and care.</p>
+            </div>
+            <div>
+                <h3>Explore</h3>
+                <a href="{{ url_for('public.about') }}">About T-YA</a>
+                <a href="{{ url_for('public.home') }}#how-it-works">How It Works</a>
+                <a href="{{ url_for('public.membership') }}">Membership</a>
+            </div>
+            <div>
+                <h3>Our approach</h3>
+                <p>Awareness. Preparedness. Execution.</p>
+                <p class="footer-note">Membership terms and assistance eligibility will be published after management confirmation.</p>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <div class="container">
+                <p>&copy; <span id="current-year">2026</span> T-YA. All rights reserved.</p>
+                <p>Trust. Integrity. You. Always.</p>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>

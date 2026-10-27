@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+{% block title %}Member Management | T-YA{% endblock %}
+
+{% block content %}
+<section class="page-hero">
+    <div class="container">
+        <p class="eyebrow">T-YA ADMINISTRATION</p>
+        <h1>Member Management</h1>
+        <p>Search member accounts and review their current status.</p>
+        <p><a class="button button-gold" href="{{ url_for('admin.index') }}">Back to Admin Dashboard</a></p>
+    </div>
+</section>
+
+<section class="section">
+    <div class="container member-management">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div aria-live="polite">
+                    {% for category, message in messages %}
+                        <p class="status-note">{{ message }}</p>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <article class="dashboard-card">
+            <h2>Member accounts</h2>
+            <p>Total registered member accounts: <strong>{{ total_members }}</strong></p>
+            <p class="form-note">Showing up to 200 matching accounts per search.</p>
+
+            <form method="get" action="{{ url_for('admin.members') }}" class="member-filter-form">
+                <div class="form-group">
+                    <label for="member-search">Search members</label>
+                    <input class="form-control" id="member-search" name="q"
+                           type="search" maxlength="100"
+                           value="{{ search }}"
+                           placeholder="Name, email, or phone">
+                </div>
+
+                <div class="form-group">
+                    <label for="member-status">Account status</label>
+                    <select class="form-control" id="member-status" name="status">
+                        <option value="" {% if not status_filter %}selected{% endif %}>All statuses</option>
+                        <option value="pending" {% if status_filter == "pending" %}selected{% endif %}>Pending</option>
+                        <option value="active" {% if status_filter == "active" %}selected{% endif %}>Active</option>
+                        <option value="suspended" {% if status_filter == "suspended" %}selected{% endif %}>Suspended</option>
+                    </select>
+                </div>
+
+                <div class="member-filter-actions">
+                    <button class="button button-navy" type="submit">Search / Filter</button>
+                    <a class="button button-gold" href="{{ url_for('admin.members') }}">Clear</a>
+                </div>
+            </form>
+        </article>
+
+        {% if members %}
+            {% for member in members %}
+                <article class="dashboard-card member-record">
+                    <div class="member-record-heading">
+                        <h2>{{ member.first_name }} {{ member.last_name }}</h2>
+                        <span class="member-status status-{{ member.status }}">{{ member.status|title }}</span>
+                    </div>
+
+                    <p><strong>Member ID:</strong> {{ member.id }}</p>
+                    <p><strong>Email:</strong> {{ member.email }}</p>
+                    <p><strong>Phone:</strong> {{ member.phone or "Not provided" }}</p>
+                    <p><strong>Account created:</strong> {{ member.created_at }}</p>
+                    <p><strong>Latest plan:</strong> {{ member.plan_name or "No membership application" }}</p>
+                    <p><strong>Latest membership status:</strong> {{ (member.membership_status or "No application")|title }}</p>
+
+                    {% if member.status == "active" %}
+                        <form method="post"
+                              action="{{ url_for('admin.change_account_status', user_id=member.id) }}"
+                              onsubmit="return confirm('Suspend this member account? Membership records will not be changed.');">
+                            <input type="hidden" name="csrf_token" value="{{ admin_csrf_token }}">
+                            <input type="hidden" name="action" value="suspend">
+                            <input type="hidden" name="q" value="{{ search }}">
+                            <input type="hidden" name="status" value="{{ status_filter }}">
+                            <button class="button button-navy" type="submit">Suspend account</button>
+                        </form>
+                    {% elif member.status == "suspended" %}
+                        <form method="post"
+                              action="{{ url_for('admin.change_account_status', user_id=member.id) }}"
+                              onsubmit="return confirm('Reactivate this member account? Membership approval and payment verification remain separate.');">
+                            <input type="hidden" name="csrf_token" value="{{ admin_csrf_token }}">
+                            <input type="hidden" name="action" value="reactivate">
+                            <input type="hidden" name="q" value="{{ search }}">
+                            <input type="hidden" name="status" value="{{ status_filter }}">
+                            <button class="button button-gold" type="submit">Reactivate account</button>
+                        </form>
+                    {% elif member.status == "pending" %}
+                        <p class="status-note">This account is awaiting approval. Use the admin dashboard to review it.</p>
+                    {% endif %}
+                </article>
+            {% endfor %}
+        {% else %}
+            <p class="status-note">No members match those search and filter settings.</p>
+        {% endif %}
+
+        <p class="status-note">
+            Suspending or reactivating an account does not approve a membership,
+            record a payment, or determine eligibility for assistance.
+        </p>
+    </div>
+</section>
+{% endblock %}

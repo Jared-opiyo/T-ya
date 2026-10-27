@@ -1,0 +1,45 @@
+﻿{% extends "base.html" %}
+
+{% block title %}Application Received | T-YA{% endblock %}
+
+{% block content %}
+<section class="section">
+    <div class="container">
+        <div class="registration-card confirmation-card">
+            <p class="eyebrow">APPLICATION RECEIVED</p>
+            <h1>Thank you for applying to T-YA.</h1>
+            <p>
+                Your application has been recorded for review.
+                Your account and membership are still pending.
+            </p>
+
+            <div class="fee-row">
+                <span>Application reference</span>
+                <strong>TYA-{{ "%06d"|format(confirmation.reference) }}</strong>
+            </div>
+            <div class="fee-row">
+                <span>Selected plan</span>
+                <strong>{{ confirmation.plan_name }}</strong>
+            </div>
+            <div class="fee-row">
+                <span>Registration fee</span>
+                <strong>KSh {{ "{:,.0f}".format(confirmation.registration_fee) }}</strong>
+            </div>
+            <div class="fee-row">
+                <span>Monthly contribution</span>
+                <strong>KSh {{ "{:,.0f}".format(confirmation.monthly_contribution) }}</strong>
+            </div>
+
+            <p class="form-note">
+                This confirmation is not a payment receipt, membership approval,
+                or guarantee of assistance. Please follow the official T-YA
+                instructions for next steps.
+            </p>
+
+            <a class="btn btn-primary" href="{{ url_for('public.home') }}">
+                Return to home
+            </a>
+        </div>
+    </div>
+</section>
+{% endblock %}

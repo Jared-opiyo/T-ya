@@ -1,0 +1,226 @@
+{% extends "base.html" %}
+{% block title %}Admin Dashboard | T-YA{% endblock %}
+
+{% block content %}
+<div class="admin-shell">
+    <aside class="admin-sidebar">
+        <a class="admin-sidebar-brand" href="{{ url_for('admin.index') }}">
+            <img class="admin-sidebar-logo" src="{{ url_for('static', filename='images/logo.jpeg') }}" alt="T-YA logo">
+            <span><strong>T-YA</strong><small>ADMINISTRATION</small></span>
+        </a>
+        <p class="admin-sidebar-label">WORKSPACE</p>
+        <nav class="admin-sidebar-nav" aria-label="Admin navigation">
+            <a class="is-current" href="{{ url_for('admin.index') }}"> Dashboard</a>
+            <a href="{{ url_for('admin.members') }}"> Members</a>
+            <a href="{{ url_for('admin.payments') }}"> Payments</a>
+            <a href="{{ url_for('admin.audit_logs') }}"> Audit log</a>
+            <a href="{{ url_for('public.home') }}"> View website</a>
+        </nav>
+        <div class="admin-sidebar-footer">
+            <span class="admin-online-dot"></span>
+            <span><strong>Administration</strong><small>Secure workspace</small></span>
+        </div>
+    </aside>
+
+    <div class="admin-main">
+        <header class="admin-topbar">
+            <div>
+                <p class="admin-breadcrumb">Workspace / Overview</p>
+                <h1>Admin Dashboard</h1>
+            </div>
+            <div class="admin-profile">
+                <span class="admin-avatar">{{ admin.first_name[:1] | upper }}</span>
+                <span><strong>{{ admin.first_name }}</strong><small>Administrator</small></span>
+            </div>
+        </header>
+
+        <section class="admin-welcome">
+            <div>
+                <p class="admin-welcome-eyebrow">T-YA ADMINISTRATION</p>
+                <h2>Welcome back, {{ admin.first_name }}!</h2>
+                <p>Trust. Integrity. You. Always. - Prepare today. Be there tomorrow.</p>
+            </div>
+            <span class="admin-welcome-symbol" aria-hidden="true">T-YA</span>
+        </section>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="approval-messages" aria-live="polite">
+                    {% for category, message in messages %}
+                        <p class="status-note">{{ message }}</p>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <section class="admin-stats-section" aria-labelledby="overview-title">
+            <div class="admin-section-heading">
+                <div><p class="admin-kicker">AT A GLANCE</p><h2 id="overview-title">Platform overview</h2></div>
+                <span class="admin-live-label"><span></span> Live totals</span>
+            </div>
+            <div class="admin-stat-grid">
+                <article class="admin-stat-card"><p>Total accounts</p><strong>{{ stats.total_users }}</strong><small>Registered users</small></article>
+                <article class="admin-stat-card"><p>Active accounts</p><strong>{{ stats.active_users }}</strong><small>Accounts enabled</small></article>
+                <article class="admin-stat-card"><p>Pending accounts</p><strong>{{ stats.pending_accounts }}</strong><small>Awaiting account review</small></article>
+                <article class="admin-stat-card"><p>Total memberships</p><strong>{{ stats.total_memberships }}</strong><small>Applications and records</small></article>
+                <article class="admin-stat-card"><p>Pending memberships</p><strong>{{ stats.pending_memberships }}</strong><small>Awaiting membership review</small></article>
+                <article class="admin-stat-card"><p>Pending payments</p><strong>{{ stats.pending_payments }}</strong><small>Awaiting payment review</small></article>
+                <article class="admin-stat-card"><p>Active plans</p><strong>{{ stats.active_plans }}</strong><small>Available plan options</small></article>
+            </div>
+        </section>
+
+        <section class="admin-work-grid">
+            <div class="admin-panel admin-activity-panel">
+                <div class="admin-panel-heading">
+                    <div><p class="admin-kicker">SYSTEM RECORDS</p><h2>Recent activity</h2></div>
+                    <a href="{{ url_for('admin.audit_logs') }}">View audit log </a>
+                </div>
+                {% if recent_activity %}
+                    <div class="admin-table-wrap">
+                        <table class="admin-table">
+                            <thead><tr><th>Activity</th><th>Administrator</th><th>Record</th><th>Time</th></tr></thead>
+                            <tbody>
+                            {% for entry in recent_activity %}
+                                <tr>
+                                    <td><strong>{{ entry.action | replace("_", " ") | title }}</strong></td>
+                                    <td>{{ ((entry.actor_first_name or "") ~ " " ~ (entry.actor_last_name or "")) | trim or "System / unavailable" }}</td>
+                                    <td>{{ entry.target_type | title }}{% if entry.target_id is not none %} #{{ entry.target_id }}{% endif %}</td>
+                                    <td>{{ entry.created_at }}</td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p class="admin-empty-state">No administrative activity has been recorded yet.</p>
+                {% endif %}
+            </div>
+
+            <aside class="admin-panel admin-shortcuts-panel">
+                <p class="admin-kicker">QUICK ACTIONS</p><h2>Manage T-YA</h2>
+                <a class="admin-shortcut" href="{{ url_for('admin.members') }}"><span><strong>Manage members</strong><small>Accounts and member records</small></span></a>
+                <a class="admin-shortcut" href="{{ url_for('admin.payments') }}"><span><strong>Review payments</strong><small>Check submitted payments</small></span></a>
+                <a class="admin-shortcut" href="{{ url_for('admin.audit_logs') }}"><span><strong>Audit history</strong><small>Recorded system actions</small></span></a>
+                <div class="admin-integrity-note"><strong>Important</strong><p>Account approval, membership approval, payment verification and eligibility decisions remain separate processes.</p></div>
+            </aside>
+        </section>
+
+        <section class="admin-panel admin-review-panel">
+            <div class="admin-panel-heading">
+                <div><p class="admin-kicker">MEMBER MANAGEMENT</p><h2>Pending member accounts</h2><p>Approving an account does not approve its membership.</p></div>
+                <a href="{{ url_for('admin.members') }}">Manage members </a>
+            </div>
+        <div class="approval-section">
+            <h2>Pending member accounts</h2>
+            <p>Approving an account enables account access when other login
+            requirements are satisfied. It does not approve the membership.</p>
+
+            {% if pending_accounts %}
+                {% for member in pending_accounts %}
+                    <article class="dashboard-card approval-card">
+                        <h3>{{ member.first_name }} {{ member.last_name }}</h3>
+                        <p><strong>Email:</strong> {{ member.email }}</p>
+                        <p><strong>Phone:</strong>
+                            {{ member.phone or "Not provided" }}</p>
+                        <p><strong>Applied:</strong> {{ member.created_at }}</p>
+
+                        <form method="post"
+                              action="{{ url_for('admin.approve_account', user_id=member.id) }}"
+                              onsubmit="return confirm('Approve this member account? The membership will remain unchanged.');">
+                            <input type="hidden" name="csrf_token"
+                                   value="{{ admin_csrf_token }}">
+                            <button class="button button-gold" type="submit">
+                                Approve account
+                            </button>
+                        </form>
+                    </article>
+                {% endfor %}
+            {% else %}
+                <p class="status-note">There are no pending member accounts.</p>
+            {% endif %}
+        </div>
+
+        </section>
+
+        <section class="admin-panel admin-review-panel">
+            <div class="admin-panel-heading">
+                <div><p class="admin-kicker">MEMBERSHIP MANAGEMENT</p><h2>Pending membership applications</h2><p>Review plan details and payment status before taking action.</p></div>
+                <a href="{{ url_for('admin.members') }}">View members </a>
+            </div>
+        <div class="approval-section">
+            <h2>Pending membership applications</h2>
+            <p>Review the selected plan and amounts before approving.
+            Approval does not confirm payment or eligibility for assistance.</p>
+
+            {% if pending_memberships %}
+                {% for membership in pending_memberships %}
+                    <article class="dashboard-card approval-card">
+                        <h3>{{ membership.member_name }}</h3>
+                        <p><strong>Email:</strong> {{ membership.member_email }}</p>
+                        <p><strong>Phone:</strong>
+                            {{ membership.member_phone or "Not provided" }}</p>
+                        <p><strong>Plan:</strong>
+                            {{ membership.plan_name or "Plan not found" }}
+                            &mdash;
+                            {{ membership.plan_category or "Category not specified" }}</p>
+                        <p><strong>Registration fee:</strong>
+                            KSh {{ "{:,.0f}".format(membership.registration_fee_kes) }}</p>
+                        <p><strong>Monthly contribution:</strong>
+                            KSh {{ "{:,.0f}".format(membership.monthly_contribution_kes) }}</p>
+
+                        <p><strong>Registration fee payment:</strong>
+                            {% if membership.registration_fee_payment_status == "verified" %}
+                                Verified
+                            {% elif membership.registration_fee_payment_status == "pending" %}
+                                Awaiting review
+                            {% elif membership.registration_fee_payment_status == "rejected" %}
+                                Rejected ? review payment details
+                            {% else %}
+                                No matching payment verified
+                            {% endif %}
+                        </p>
+
+                        <p><strong>First monthly contribution:</strong>
+                            {% if membership.monthly_payment_status == "verified" %}
+                                Verified
+                            {% elif membership.monthly_payment_status == "pending" %}
+                                Awaiting review
+                            {% elif membership.monthly_payment_status == "rejected" %}
+                                Rejected ? review payment details
+                            {% else %}
+                                No matching payment verified
+                            {% endif %}
+                        </p>
+
+                        <p><strong>Account status:</strong>
+                            {{ membership.account_status or "No linked account" }}</p>
+                        <p><strong>Application date:</strong>
+                            {{ membership.created_at }}</p>
+
+                        {% if membership.account_status == "active" and membership.user_id %}
+                            <form method="post"
+                                  action="{{ url_for('admin.approve_membership', membership_id=membership.membership_id) }}"
+                                  onsubmit="return confirm('Approve this membership? This does not mark any payment as paid.');">
+                                <input type="hidden" name="csrf_token"
+                                       value="{{ admin_csrf_token }}">
+                                <button class="button button-gold" type="submit">
+                                    Approve membership
+                                </button>
+                            </form>
+                        {% else %}
+                            <p class="status-note">
+                                Approve the linked account first. Then review
+                                this membership separately.
+                            </p>
+                        {% endif %}
+                    </article>
+                {% endfor %}
+            {% else %}
+                <p class="status-note">There are no pending membership applications.</p>
+            {% endif %}
+        </div>
+
+        </section>
+    </div>
+</div>
+{% endblock %}

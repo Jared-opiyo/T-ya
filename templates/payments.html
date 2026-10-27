@@ -1,0 +1,175 @@
+﻿{% extends "base.html" %}
+{% block title %}Payments | T-YA{% endblock %}
+
+{% block content %}
+<section class="page-hero">
+    <div class="container">
+        <p class="eyebrow">MEMBER PAYMENT REPORTING</p>
+        <h1>Payments and contributions</h1>
+        <p>Report a payment and track its review status.</p>
+    </div>
+</section>
+
+<section class="section">
+    <div class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <p class="status-note" role="status">{{ message }}</p>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        {% if errors %}
+            <div class="status-note" role="alert">
+                <strong>Please check the following:</strong>
+                <ul>
+                    {% for field, message in errors.items() %}
+                        <li>{{ message }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
+
+        {% if membership %}
+            <article class="dashboard-card">
+                <h2>Your membership</h2>
+                <div class="dashboard-detail">
+                    <span>Membership reference</span>
+                    <strong>{{ membership.id }}</strong>
+                </div>
+                <div class="dashboard-detail">
+                    <span>Plan</span>
+                    <strong>{{ membership.plan_name or "Plan details unavailable" }}</strong>
+                </div>
+                <div class="dashboard-detail">
+                    <span>Registration fee</span>
+                    <strong>KSh {{ "{:,.0f}".format(membership.registration_fee_kes) }}</strong>
+                </div>
+                <div class="dashboard-detail">
+                    <span>Monthly contribution</span>
+                    <strong>KSh {{ "{:,.0f}".format(membership.monthly_contribution_kes) }}</strong>
+                </div>
+                <p class="status-note">
+                    Reporting a payment does not confirm receipt of funds or
+                    approve your membership. T-YA management must verify the
+                    payment separately.
+                </p>
+            </article>
+
+            <article class="dashboard-card" style="margin-top: 1.5rem;">
+                <h2>Report a payment</h2>
+                <form method="post" action="{{ url_for('payments.payment_page') }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+
+                    <div class="form-group">
+                        <label for="payment_type">Payment type</label>
+                        <select id="payment_type" name="payment_type" required>
+                            <option value="registration_fee"
+                                {% if form_data.get('payment_type') == 'registration_fee' %}selected{% endif %}>
+                                Registration fee
+                            </option>
+                            <option value="monthly_contribution"
+                                {% if form_data.get('payment_type') == 'monthly_contribution' %}selected{% endif %}>
+                                Monthly contribution
+                            </option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="amount_kes">Amount paid (KSh)</label>
+                        <input id="amount_kes" name="amount_kes" type="number"
+                               min="1" step="1" required
+                               value="{{ form_data.get('amount_kes', '') }}">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="payment_method">Payment method</label>
+                        <select id="payment_method" name="payment_method" required>
+                            <option value="mpesa"
+                                {% if form_data.get('payment_method') == 'mpesa' %}selected{% endif %}>
+                                M-Pesa
+                            </option>
+                            <option value="bank"
+                                {% if form_data.get('payment_method') == 'bank' %}selected{% endif %}>
+                                Bank transfer
+                            </option>
+                            <option value="cash"
+                                {% if form_data.get('payment_method') == 'cash' %}selected{% endif %}>
+                                Cash
+                            </option>
+                            <option value="other"
+                                {% if form_data.get('payment_method') == 'other' %}selected{% endif %}>
+                                Other
+                            </option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="transaction_reference">Transaction or receipt reference</label>
+                        <input id="transaction_reference"
+                               name="transaction_reference" type="text"
+                               minlength="3" maxlength="100" required
+                               value="{{ form_data.get('transaction_reference', '') }}"
+                               autocomplete="off">
+                        <small>For example, the M-Pesa transaction code or bank receipt reference.</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="payment_date">Date paid</label>
+                        <input id="payment_date" name="payment_date" type="date"
+                               required max="{{ today }}"
+                               value="{{ form_data.get('payment_date', '') }}">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="member_note">Additional note (optional)</label>
+                        <textarea id="member_note" name="member_note"
+                                  rows="3" maxlength="500">{{ form_data.get('member_note', '') }}</textarea>
+                    </div>
+
+                    <button class="button button-gold" type="submit">
+                        Submit payment for review
+                    </button>
+                </form>
+            </article>
+        {% else %}
+            <article class="dashboard-card">
+                <h2>No linked membership found</h2>
+                <p>You need a membership linked to your account before you can report a payment.</p>
+                <a class="button button-gold" href="{{ url_for('public.membership') }}">
+                    View membership plans
+                </a>
+            </article>
+        {% endif %}
+
+        <section class="approval-section">
+            <h2>Your payment history</h2>
+            {% if history %}
+                {% for payment in history %}
+                    <article class="dashboard-card approval-card">
+                        <h3>Payment #{{ payment.id }}</h3>
+                        <p><strong>Type:</strong>
+                            {{ payment.payment_type.replace('_', ' ')|title }}</p>
+                        <p><strong>Amount:</strong>
+                            KSh {{ "{:,.0f}".format(payment.amount_kes) }}</p>
+                        <p><strong>Method:</strong>
+                            {{ payment.payment_method|upper }}</p>
+                        <p><strong>Reference:</strong>
+                            {{ payment.transaction_reference }}</p>
+                        <p><strong>Date paid:</strong> {{ payment.payment_date }}</p>
+                        <p><strong>Status:</strong> {{ payment.status|capitalize }}</p>
+                        {% if payment.review_note %}
+                            <p><strong>Review note:</strong> {{ payment.review_note }}</p>
+                        {% endif %}
+                    </article>
+                {% endfor %}
+            {% else %}
+                <p class="status-note">You have not reported any payments yet.</p>
+            {% endif %}
+        </section>
+
+        <p><a href="{{ url_for('auth.dashboard') }}">Return to your dashboard</a></p>
+    </div>
+</section>
+{% endblock %}

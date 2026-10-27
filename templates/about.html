@@ -1,0 +1,37 @@
+﻿{% extends "base.html" %}
+
+{% block title %}About T-YA{% endblock %}
+
+{% block content %}
+<section class="section section-intro">
+    <div class="container">
+        <div class="section-heading">
+            <span class="eyebrow">WHO WE ARE</span>
+            <h2>Trust. Integrity. You. <span>Always.</span></h2>
+            <p>T-YA exists to encourage awareness, preparedness and practical planning for life's difficult moments.</p>
+        </div>
+
+        <div class="pillar-grid">
+            <article class="pillar-card">
+                <div class="pillar-icon icon-blue">◎</div>
+                <h3>Our Purpose</h3>
+                <p>Help individuals and families think ahead, understand their options and prepare for responsibilities that may arise when a loss occurs.</p>
+            </article>
+            <article class="pillar-card featured-pillar">
+                <div class="pillar-icon icon-gold">◇</div>
+                <h3>Our Approach</h3>
+                <p>Build a clear journey from awareness, to preparedness, to execution, with understandable information and transparent terms.</p>
+            </article>
+            <article class="pillar-card">
+                <div class="pillar-icon icon-blue">♡</div>
+                <h3>Our Commitment</h3>
+                <p>Put people first through respectful communication, clear information and responsible handling of membership details.</p>
+            </article>
+        </div>
+
+        <div style="text-align:center; margin-top:40px;">
+            <a class="button button-navy" href="{{ url_for('public.home') }}">Return to Home <span aria-hidden="true">→</span></a>
+        </div>
+    </div>
+</section>
+{% endblock %}

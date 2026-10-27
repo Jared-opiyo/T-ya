@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+{% block title %}Audit Log | T-YA{% endblock %}
+
+{% block content %}
+<section class="page-hero">
+    <div class="container">
+        <p class="eyebrow">T-YA ADMINISTRATION</p>
+        <h1>Audit Log</h1>
+        <p>Review recorded administrative actions and their timestamps.</p>
+    </div>
+</section>
+
+<section class="section">
+    <div class="container">
+        <p class="admin-member-link">
+            <a class="button button-gold" href="{{ url_for('admin.index') }}">
+                Back to Admin Dashboard
+            </a>
+            <a class="button button-gold" href="{{ url_for('admin.members') }}">
+                Manage Members
+            </a>
+        </p>
+
+        <article class="dashboard-card">
+            <h2>Search audit history</h2>
+            <form method="get" action="{{ url_for('admin.audit_logs') }}">
+                <p>
+                    <label for="action">Action contains</label>
+                    <input id="action" name="action" type="search"
+                           maxlength="80" value="{{ action_filter }}"
+                           placeholder="e.g. membership_approved">
+                </p>
+                <p>
+                    <label for="target_type">Record type</label>
+                    <select id="target_type" name="target_type">
+                        <option value="" {% if not target_filter %}selected{% endif %}>All record types</option>
+                        <option value="user" {% if target_filter == "user" %}selected{% endif %}>User account</option>
+                        <option value="membership" {% if target_filter == "membership" %}selected{% endif %}>Membership</option>
+                    </select>
+                </p>
+                <button class="button button-gold" type="submit">Filter entries</button>
+                <a href="{{ url_for('admin.audit_logs') }}">Clear filters</a>
+            </form>
+        </article>
+
+        <p class="status-note">
+            {{ total_entries }} matching entr{{ "y" if total_entries == 1 else "ies" }}.
+            This page is read-only.
+        </p>
+
+        {% if entries %}
+            {% for entry in entries %}
+                <article class="dashboard-card approval-card">
+                    <h2>{{ entry.action | replace("_", " ") | title }}</h2>
+                    <p><strong>Recorded:</strong> {{ entry.created_at }}</p>
+                    <p><strong>Administrator:</strong>
+                        {% if entry.actor_user_id %}
+                            {{ (entry.actor_first_name or "") ~ " " ~ (entry.actor_last_name or "") }}
+                            {% if entry.actor_email %}({{ entry.actor_email }}){% endif %}
+                        {% else %}
+                            Account no longer available
+                        {% endif %}
+                    </p>
+                    <p><strong>Action:</strong> {{ entry.action }}</p>
+                    <p><strong>Record type:</strong> {{ entry.target_type }}</p>
+                    <p><strong>Record ID:</strong>
+                        {{ entry.target_id if entry.target_id is not none else "Not specified" }}
+                    </p>
+                    <details>
+                        <summary>View recorded details</summary>
+                        <pre>{{ entry.details_display }}</pre>
+                    </details>
+                    <p><small>Audit entry #{{ entry.id }}</small></p>
+                </article>
+            {% endfor %}
+
+            <nav aria-label="Audit log pages" class="admin-member-link">
+                {% if page > 1 %}
+                    <a class="button button-gold"
+                       href="{{ url_for('admin.audit_logs', page=page-1, action=action_filter, target_type=target_filter) }}">Previous</a>
+                {% endif %}
+                <span>Page {{ page }} of {{ total_pages }}</span>
+                {% if page < total_pages %}
+                    <a class="button button-gold"
+                       href="{{ url_for('admin.audit_logs', page=page+1, action=action_filter, target_type=target_filter) }}">Next</a>
+                {% endif %}
+            </nav>
+        {% else %}
+            <article class="dashboard-card">
+                <h2>No audit entries found</h2>
+                <p>There are no entries matching these filters. Administrative actions are recorded when they succeed.</p>
+            </article>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

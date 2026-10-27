@@ -1,0 +1,166 @@
+﻿{% extends "base.html" %}
+
+{% block title %}Apply for Membership | T-YA{% endblock %}
+
+{% block content %}
+<section class="page-hero">
+    <div class="container">
+        <p class="eyebrow">YOUR PREPAREDNESS JOURNEY</p>
+        <h1>Create your T-YA account</h1>
+        <p>Submit your details and choose a membership plan to begin your application.</p>
+    </div>
+</section>
+
+<section class="section">
+    <div class="container registration-layout">
+        <div class="registration-card">
+            <h2>Registration details</h2>
+
+            {% if errors.get('form') %}
+                <p class="form-error" role="alert">{{ errors['form'] }}</p>
+            {% endif %}
+
+            <form method="post" action="{{ url_for('public.register') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="first_name">First name</label>
+                        <input class="form-control" id="first_name"
+                               name="first_name" maxlength="80"
+                               autocomplete="given-name" required
+                               value="{{ form_data.get('first_name', '') }}">
+                        {% if errors.get('first_name') %}
+                            <small class="form-error">{{ errors['first_name'] }}</small>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-group">
+                        <label for="last_name">Last name</label>
+                        <input class="form-control" id="last_name"
+                               name="last_name" maxlength="80"
+                               autocomplete="family-name" required
+                               value="{{ form_data.get('last_name', '') }}">
+                        {% if errors.get('last_name') %}
+                            <small class="form-error">{{ errors['last_name'] }}</small>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="email">Email address</label>
+                    <input class="form-control" id="email" name="email"
+                           type="email" maxlength="254"
+                           autocomplete="email" required
+                           value="{{ form_data.get('email', '') }}">
+                    {% if errors.get('email') %}
+                        <small class="form-error">{{ errors['email'] }}</small>
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label for="phone">Phone number</label>
+                    <input class="form-control" id="phone" name="phone"
+                           type="tel" maxlength="30"
+                           autocomplete="tel" required
+                           value="{{ form_data.get('phone', '') }}">
+                    {% if errors.get('phone') %}
+                        <small class="form-error">{{ errors['phone'] }}</small>
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label for="plan_id">Membership plan</label>
+                    <select class="form-control" id="plan_id" name="plan_id" required>
+                        <option value="">Choose a plan</option>
+                        {% for plan in plans %}
+                        <option value="{{ plan.id }}"
+                            {% if form_data.get('plan_id', '')|string == plan.id|string %}selected{% endif %}>
+                            {{ plan.name }} — KSh {{ "{:,.0f}".format(plan.contribution) }}/month
+                        </option>
+                        {% endfor %}
+                    </select>
+                    {% if errors.get('plan_id') %}
+                        <small class="form-error">{{ errors['plan_id'] }}</small>
+                    {% endif %}
+                </div>
+
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="password">Password</label>
+                        <input class="form-control" id="password" name="password"
+                               type="password" minlength="8" maxlength="128"
+                               autocomplete="new-password" required>
+                        {% if errors.get('password') %}
+                            <small class="form-error">{{ errors['password'] }}</small>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-group">
+                        <label for="confirm_password">Confirm password</label>
+                        <input class="form-control" id="confirm_password"
+                               name="confirm_password" type="password"
+                               minlength="8" maxlength="128"
+                               autocomplete="new-password" required>
+                        {% if errors.get('confirm_password') %}
+                            <small class="form-error">{{ errors['confirm_password'] }}</small>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <button class="btn btn-primary registration-submit" type="submit">
+                    Submit membership application
+                </button>
+
+                <p class="form-note">
+                    Submitting this form creates a pending application.
+                    It does not confirm payment or activate membership.
+                </p>
+            </form>
+        </div>
+
+        <aside class="registration-summary">
+            <p class="eyebrow">FEE SUMMARY</p>
+            <h2>Your selected plan</h2>
+            <p>The registration fee is separate from the monthly contribution.</p>
+
+            <div class="fee-row">
+                <span>Registration fee</span>
+                <strong>KSh {{ "{:,.0f}".format(registration_fee) }}</strong>
+            </div>
+
+            <div class="fee-row">
+                <span>Monthly contribution</span>
+                <strong id="selected-contribution">Choose a plan</strong>
+            </div>
+
+            <p class="form-note">
+                The amounts shown are based on the current plan records.
+                Eligibility and assistance terms require management confirmation.
+            </p>
+        </aside>
+    </div>
+</section>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const planSelect = document.getElementById("plan_id");
+    const contributionDisplay = document.getElementById("selected-contribution");
+    const contributions = {
+        {% for plan in plans %}
+        "{{ plan.id }}": {{ plan.contribution }}{% if not loop.last %},{% endif %}
+        {% endfor %}
+    };
+
+    function updateContribution() {
+        const amount = contributions[planSelect.value];
+        contributionDisplay.textContent = amount === undefined
+            ? "Choose a plan"
+            : "KSh " + Number(amount).toLocaleString("en-KE") + "/month";
+    }
+
+    planSelect.addEventListener("change", updateContribution);
+    updateContribution();
+});
+</script>
+{% endblock %}

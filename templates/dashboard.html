@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% block title %}Member Dashboard | T-YA{% endblock %}
+
+{% block content %}
+<section class="page-hero">
+    <div class="container">
+        <p class="eyebrow">YOUR T-YA ACCOUNT</p>
+        <h1>Welcome, {{ member.first_name }}</h1>
+        <p>View your account and membership information in one place.</p>
+    </div>
+</section>
+
+<section class="section">
+    <div class="container dashboard-layout">
+        <article class="dashboard-card">
+            <h2>Account details</h2>
+            <div class="dashboard-detail">
+                <span>Full name</span>
+                <strong>{{ member.first_name }} {{ member.last_name }}</strong>
+            </div>
+            <div class="dashboard-detail">
+                <span>Email address</span>
+                <strong>{{ member.email }}</strong>
+            </div>
+            <div class="dashboard-detail">
+                <span>Account status</span>
+                <strong>{{ member.account_status|capitalize }}</strong>
+            </div>
+        </article>
+
+        <article class="dashboard-card">
+            <h2>Membership details</h2>
+
+            {% if member.membership_id %}
+                <div class="dashboard-detail">
+                    <span>Membership reference</span>
+                    <strong>{{ member.membership_id }}</strong>
+                </div>
+                <div class="dashboard-detail">
+                    <span>Selected plan</span>
+                    <strong>{{ member.plan_name or 'Plan details unavailable' }}</strong>
+                </div>
+                <div class="dashboard-detail">
+                    <span>Monthly contribution</span>
+                    <strong>
+                        KSh {{ "{:,.0f}".format(member.monthly_contribution_kes) }}
+                    </strong>
+                </div>
+                <div class="dashboard-detail">
+                    <span>Registration fee</span>
+                    <strong>
+                        KSh {{ "{:,.0f}".format(member.registration_fee_kes) }}
+                    </strong>
+                </div>
+                <div class="dashboard-detail">
+                    <span>Membership status</span>
+                    <strong>{{ member.membership_status|capitalize }}</strong>
+                </div>
+
+                {% if member.membership_status == 'pending' %}
+                    <p class="status-note">
+                        Your membership is awaiting management review.
+                        Required payments must also be verified before
+                        activation. Submitting a payment report does not
+                        confirm that funds have been received.
+                    </p>
+                {% elif member.membership_status == 'active' %}
+                    <p class="status-note">
+                        Your membership is active. Keep your payment
+                        references and check your payment history for
+                        management verification updates.
+                    </p>
+                {% elif member.membership_status == 'suspended' %}
+                    <p class="status-note">
+                        Your membership is currently suspended.
+                        Please contact T-YA management for assistance.
+                    </p>
+                {% else %}
+                    <p class="status-note">
+                        If you have questions about your membership
+                        status, please contact T-YA management.
+                    </p>
+                {% endif %}
+
+                <p style="margin-top: 1rem;">
+                    <a class="button button-gold"
+                       href="{{ url_for('payments.payment_page') }}">
+                        Report a payment / View payment history
+                    </a>
+                </p>
+            {% else %}
+                <p>No membership record is linked to this account yet.</p>
+                <a class="btn btn-secondary"
+                   href="{{ url_for('public.membership') }}">
+                    View membership plans
+                </a>
+            {% endif %}
+        </article>
+    </div>
+</section>
+{% endblock %}

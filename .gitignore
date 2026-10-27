@@ -1,0 +1,34 @@
+﻿.venv/
+__pycache__/
+*.py[cod]
+.env
+instance/
+*.db
+*.sqlite
+*.sqlite3
+.pytest_cache/
+.coverage
+
+# Local secrets and environment files
+.env.*
+!.env.example
+
+# Local databases and backups
+backups/
+
+# Python environments and generated files
+
+# Local editor and operating-system files
+.vscode/
+.idea/
+Thumbs.db
+Desktop.ini
+# Temporary local tests and patch snapshots
+test_*_temp.py
+*-before-postgres-*.py
+*-before-postgres-safe-patch.py
+*-before-helpers-*.py
+
+# Backup copies
+*.backup
+*.backup-*

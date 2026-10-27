@@ -1,0 +1,67 @@
+﻿{% extends "base.html" %}
+
+{% block title %}Membership Plans | T-YA{% endblock %}
+
+{% block content %}
+<section class="page-hero">
+    <div class="container">
+        <p class="eyebrow">PREPARE TODAY</p>
+        <h1>Find the T-YA plan that fits your family.</h1>
+        <p>
+            Explore the available membership options and their monthly
+            contributions. Review eligibility and membership terms before joining.
+        </p>
+    </div>
+</section>
+
+<section class="section">
+    <div class="container">
+        <div class="notice">
+            <strong>Registration fee:</strong>
+            KSh {{ "{:,.0f}".format(registration_fee) }} — charged separately
+            from the selected plan's monthly contribution.
+        </div>
+
+        <div class="plans-grid">
+            {% for plan in plans %}
+            <article class="plan-card">
+                <p class="plan-type">{{ plan.type }}</p>
+                <h2>{{ plan.name }}</h2>
+                <p class="plan-price">
+                    <span>KSh</span>
+                    {{ "{:,.0f}".format(plan.contribution) }}
+                    <small>/ month</small>
+                </p>
+                <p>{{ plan.description }}</p>
+
+                <div class="plan-detail">
+                    <span>Grace period</span>
+                    <strong>{{ plan.grace }} months</strong>
+                </div>
+
+                <a class="btn btn-primary"
+                   href="{{ url_for('public.register', plan_id=plan.id) }}">
+                    Apply for this plan
+                </a>
+            </article>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<section class="section section-soft" id="membership-terms">
+    <div class="container">
+        <h2>Before you choose a plan</h2>
+        <p>
+            Eligibility, age limits, grace periods, and the terms governing
+            assistance must be confirmed with T-YA management before enrollment.
+            Displayed contributions are not a guarantee of payment or benefits.
+        </p>
+        <p>
+            Please contact the T-YA team to confirm the applicable membership
+            rules and the full terms of your selected plan.
+        </p>
+        <a class="btn btn-secondary" href="/about">Learn about T-YA</a>
+    </div>
+</section>
+{% endblock %}
